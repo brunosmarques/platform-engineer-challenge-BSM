@@ -12,7 +12,9 @@ Before moving on, please make sure your computer have at least:
 - 2GB of free memory
 - 20GB of free storage
 - Internet connection
-- A container/virtual machine manager. It can be any of these:
+- A container/virtual machine manager
+
+In this guide we'll be using Podman as manager because it's compatible with all OS and it's a typical installation. However, you should use what you're more confortable with. If you don't know where to start, Docker Desktop is a good option for personal use.
 
 
 | Container/VM manager                       | Supported OS                            | How to install (summary)                                                                                                                          | Official documentation / more information                                                     |
@@ -28,11 +30,9 @@ Before moving on, please make sure your computer have at least:
 | Virtualbox                                 | Windows, MacOS and Linux                | Follow official doc. On Linux it depends on the distribution and can be a complicated process                                                     | https://www.virtualbox.org/wiki/Downloads                                                     |
 | VMware Fusion/Workstation                  | Windows, MacOS and Linux (undocumented) | Follow official doc. Linux doesn't have official documentation                                                                                    | https://minikube.sigs.k8s.io/docs/drivers/vmware/                                             |
 
-In this guide we'll be using Hyper-V because it's a Windows native option that's easily accessible. However, you should use what you're more confortable with. If you don't know where to start, Docker Desktop is a good option for personal use.
-
 # Minikube
 
-MiniKube is an application that allow us to deploy multiple Kubernetes clusters locally. It automates tasks of a Kubernetes cluster installation and interfaces it with the container/vm manager we have available, making the kubernetes cluster creation much easier and faster.
+MiniKube is an application that allow us to deploy multiple Kubernetes clusters locally. It automates tasks of a Kubernetes cluster installation and interfaces it with the container/vm manager we have available, making the kubernetes cluster creation much easier and faster than [creating it manually](https://kubernetes.io/releases/download/). [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) is a similar application to Minikube, but it has a number of [know issues](https://kind.sigs.k8s.io/docs/user/known-issues/), especially when it's [using Docker Desktop on Windows and MacOS](https://kind.sigs.k8s.io/docs/user/quick-start/#settings-for-docker-desktop), which makes it more suitable to advanced users.
 
 ## Minikube installation
 
@@ -100,7 +100,7 @@ Now that we installed MiniKube, we need to set the container/vm manager driver. 
 In our example we're using Hyper-V, so we need to run:
 
 ```
-minikube config set driver hyperv
+minikube config set driver podman
 ```
 
 ### Start Minikube
@@ -114,39 +114,51 @@ minikube start
 Result should be similar to:
 
 ```
-* minikube v1.34.0 on Microsoft Windows 11 Pro 10.0.22631.4460 Build 22631.4460
-* Automatically selected the docker driver
-* Using Docker Desktop driver with root privileges
-* Starting "minikube" primary control-plane node in "minikube" cluster
-* Pulling base image v0.0.45 ...
-* Downloading Kubernetes v1.31.0 preload ...
-    > preloaded-images-k8s-v18-v1...:  326.69 MiB / 326.69 MiB  100.00% 30.75 M
-    > gcr.io/k8s-minikube/kicbase...:  487.90 MiB / 487.90 MiB  100.00% 38.43 M
-* Creating docker container (CPUs=2, Memory=3900MB) ...
-! Failing to connect to https://registry.k8s.io/ from inside the minikube container
-* To pull new external images, you may need to configure a proxy: https://minikube.sigs.k8s.io/docs/reference/networking/proxy/
-* Preparing Kubernetes v1.31.0 on Docker 27.2.0 ...
-  - Generating certificates and keys ...
-  - Booting up control plane ...
-  - Configuring RBAC rules ...
-* Configuring bridge CNI (Container Networking Interface) ...
-* Verifying Kubernetes components...
-  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
-* Enabled addons: storage-provisioner, default-storageclass
-* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+😄  minikube v1.34.0 on Microsoft Windows 11 Pro 10.0.22631.4460 Build 22631.4460
+✨  Using the podman (experimental) driver based on user configuration
+📌  Using Podman driver with root privileges
+👍  Starting "minikube" primary control-plane node in "minikube" cluster
+🚜  Pulling base image v0.0.45 ...
+E1123 21:40:48.538300   20780 cache.go:189] Error downloading kic artifacts:  not yet implemented, see issue #8426
+🔥  Creating podman container (CPUs=2, Memory=3900MB) ...
+❗  Failing to connect to https://registry.k8s.io/ from inside the minikube container
+💡  To pull new external images, you may need to configure a proxy: https://minikube.sigs.k8s.io/docs/reference/networking/proxy/
+🐳  Preparing Kubernetes v1.31.0 on Docker 27.2.0 ...E1123 21:41:07.748623   20780 start.go:132] Unable to get host IP: RoutableHostIPFromInside is currently only implemented for linux
+
+    ▪ Generating certificates and keys ...
+    ▪ Booting up control plane ...
+    ▪ Configuring RBAC rules ...
+🔗  Configuring bridge CNI (Container Networking Interface) ...
+🔎  Verifying Kubernetes components...
+    ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
+🌟  Enabled addons: storage-provisioner, default-storageclass
+💡  kubectl not found. If you need it, try: 'minikube kubectl -- get pods -A'
+🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
 ```
 
-This cluster is now configured to our `kubectl` profile, so we're now able to execute Kubernetes commands directly to the cluster API. To verify that's the case, we can run any of these commands:
+In the installation process Minikube has also added `kubectl` to our session path. This means that the cluster we just created is accessible via `kubectl` and we can send commands directly to the cluster API in this session. To verify that's the case, we can run any of these commands:
 
 * `kubectl get nodes -o wide` shows all the nodes of the cluster with a few details
 * `kubectl get pods -A` shows all pods running in all namespaces, including sytem pods
 * `kubectl run pause --image=registry.k8s.io/pause:latest` creates a pod in default namespace running a custom image named 'pause'
 
+If we are in a different session, we can use the Minikube built-in `kubectl` instead of the host OS. To do that, we simply run `minikube kubectl -- <KUBECTL ARGUMENTS>`. For the examples above, it will be:
+
+* `minikube kubectl -- get nodes -o wide`
+* `minikube kubectl -- get pods -A`
+* `minikube kubectl -- run pause --image=registry.k8s.io/pause:latest`
+
 If you're able to run kubectl commands on your minikube cluster, your kubernetes cluster was succesfully created and it's operational. Congratulations!
+
+#### Minikube Dashboard
+
+For a visual overview of the cluster and the workloads, we can run `minikube dashboard`. This will download and run a couple of docker images and expose an endpoint of the cluster via local proxy. After that, we can navigate access the cluster configuration in a more visual way using any modern web browser.
+
+< dashboard.png >
 
 ## Troubleshooting
 
-Minikube application is well adaptative solution, that covers many different OS, container and VMs backends, so it's normal that we face a few problems. Here's a few common issues people have when setting up Minikube:
+Minikube application covers many different OS, container and VMs backends, so it's normal that we face a few problems. Here's a few common issues people have when setting up Minikube:
 
 ### Minikube cannot start
 
@@ -169,5 +181,9 @@ For example, by default minikube uses docker backend and this example-system doe
 
 To fix this issue, we can:
 
-- Install and configure the docker runtime that is missing. If it is already installed, make sure it is running and the user executing Minikube has the right permissions
-- Try a different container manager provider. Run the command `minikube start --driver=<BACKEND_PROVIDER>` using another container provider, if you manage to start to cluster this way, you can set it up as the default driver (refeer to "Set the container/vm manager driver" section of this guide)
+* Install and configure the docker runtime that is missing. If it is already installed, make sure it is running and the user executing Minikube has the right permissions
+* Try a different container manager provider. Run the command `minikube start --driver=<BACKEND_PROVIDER>` using another container provider, if you manage to start to cluster this way, you can set it up as the default driver (refeer to "Set the container/vm manager driver" section of this guide)
+
+### Dashboard never starts
+
+If the dashboard is taking too long to start it is possible the networking layer is misconfigured. Unfortunately this is most likely related to the backend manager and configuration varies a lot between providers. A docker manager running in Linux is the native and less complex setup. Hyper-V running on Windows can have some problems in multi nodes clusters, while Podman using WSL2 works fine as long as runner VM network is not shared with host. If this happens to you, consider the official provider documentation about network or changing the provider backend when possible.
