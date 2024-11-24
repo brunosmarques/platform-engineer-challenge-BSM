@@ -49,7 +49,6 @@ terraform {
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
-
 ```
 
 ## namespaces.tf
@@ -409,7 +408,7 @@ Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
 
 That's it, terraform has finished without errors. Notice that it did not matter the ordering of the resources in the files, Terraform first created the namespaces and then the serviceaccount, role and finally the binding. It wouldn't be possible to do in a reverse order, as the binding depends on the role/serviceaccount and they depend on the namespaces. This dependency complexity can get a lot more complicated, but thankfuly Terraform manages that for us.
 
-## Testing RBAC permissions
+## Verifying resources created
 
 In previous steps we created a Kubernetes cluster configuration using Terraform. That consists of two namespaces, one serviceaccount, one role and one binding. We will now verify those resources in the cluster using `kubectl`.
 
@@ -423,14 +422,82 @@ Expected result:
 
 ````
 NAME                   STATUS   AGE
+(...)
 burguer                Active   76m
-default                Active   14h
-kube-node-lease        Active   14h
-kube-public            Active   14h
-kube-system            Active   14h
-kubernetes-dashboard   Active   14h
 pizza                  Active   76m
 ````
+
+### serviceaccount
+
+```
+kubectl get serviceaccount -A
+```
+
+Expected result:
+
+````
+NAMESPACE              NAME                                          SECRETS   AGE
+(...)
+pizza                  pineapple                                     0         78m
+````
+
+### role
+
+```
+kubectl get role -A
+```
+
+Expected result:
+
+````
+NAMESPACE              NAME                                             CREATED AT
+(...)
+pizza                  read-pods                                        2024-11-24T15:47:58Z
+````
+
+### binding
+
+```
+kubectl get rolebinding -A
+```
+
+Expected result:
+
+````
+NAMESPACE              NAME                                                ROLE                                                  AGE
+(...)
+pizza                  pineapple_read_pods                                 Role/read-pods                                        82m
+````
+
+### Testing the access
+
+We can now verify the effectiveness of our RBAC. We created one serviceaccount `pinapple` in `pizza` namespace, and we bind it to a role that allows for reading pods in `pizza` namespace. So this serviceaccount should be able to read pods in `pizza`, but it should not read pods in `burguer` namespace. We use the `can-i` command to simulate the usage of the serviceaccount in different conditions:
+
+Can `pinapple` get pods in `pizza` namespace?
+
+```
+kubectl auth can-i get pods --as=system:serviceaccount:pizza:pineapple -n pizza
+```
+
+Result:
+
+````
+yes
+````
+
+Can `pinapple` get pods in `burguer` namespace?
+
+```
+kubectl auth can-i get pods --as=system:serviceaccount:pizza:pineapple -n burguer
+```
+
+Result:
+
+````
+no
+````
+
+We have now successfuly verified our RBAC permissons using `kubectl auth can-i`.
 
 ## Modifying existing resources
 
@@ -439,7 +506,7 @@ Once we ran terraform it generated some files in our project root folder. They r
 However, changing or removing code can create undesired situations, especially when there are things deployed in the infrastructure that are unknow to Terraform. For example, let's say we manually deployed an application called `3Brasseurs` in burguer namespace without using Terraform. Terraform isn't aware of the existance of this application. Now we will attempt to rename the namespace from `burguer`  to `fries`. We change namespace.tf to:
 
 ```
- (...)
+(...)
 resource "kubernetes_namespace" "burguer" {
   metadata {
     name = "fries" # Previously "burguer"
@@ -451,7 +518,7 @@ resource "kubernetes_namespace" "burguer" {
 And this is the result of `terraform plan`:
 
 ```
-  # kubernetes_namespace.burguer must be replaced
+# kubernetes_namespace.burguer must be replaced
 -/+ resource "kubernetes_namespace" "burguer" {
       ~ id                               = "burguer" -> (known after apply)
         # (1 unchanged attribute hidden)
@@ -473,7 +540,7 @@ The problem here is that not only Terraform is not aware we have an application 
 Some resources do support changes without recreation, like the Role permission. For example, here is a plan to remove "watch" verb from Role `read-pods` permissions:
 
 ```
-  # kubernetes_role.read_pods will be updated in-place
+# kubernetes_role.read_pods will be updated in-place
   ~ resource "kubernetes_role" "read_pods" {
         id = "pizza/read-pods"
 
@@ -489,7 +556,6 @@ Some resources do support changes without recreation, like the Role permission. 
     }
 
 Plan: 0 to add, 1 to change, 0 to destroy.
-
 ```
 
 Wherever we are changing or deleting resources in Terraform, we need to be aware of the implications of it on the entire system, and not only rely on Terraform plan information. That's why many companies use tools to incorporate CI/CD process closer to the infrastructure definition.
@@ -537,3 +603,4 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 ````
 
 By managing the infrastructure as code we can push it to a GIT repository and open the possibility of any developer to create a PullRequest, making the interaction between developers and infrastructure managers straightforward, repeteable and auditable. By linking the PRs with a ticket system we can track every part of the infrastructure to its own story and requirements.
+
