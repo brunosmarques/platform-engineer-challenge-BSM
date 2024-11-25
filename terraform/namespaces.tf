@@ -8,4 +8,8 @@ resource "kubernetes_namespace" "burguer" {
   metadata {
     name = "burguer"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }

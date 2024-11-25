@@ -537,6 +537,30 @@ And this is the result of `terraform plan`:
 
 The problem here is that not only Terraform is not aware we have an application running in `burger` namespace, it cannot rename a namespace due to Kubernetes API restrictions. The solution proposed by Terraform is to delete the old `burguer` namespace and to create a new one named `fries`. This, however, will delete our application `3Brasseurs` with all its data, and it will not recreate it on the new namespace.
 
+We can avoid this issue by adding a lifecycle block in the resource. This will prevent the destruction of the resource, causing the plan/apply to fail, but saving us from deleting the critical resource.
+
+````
+lifecycle {
+   prevent_destroy = true
+}
+````
+
+New plan with lifecycle:
+
+```
+(...)
+Plan: 0 to add, 0 to change, 5 to destroy.
+╷
+│ Error: Instance cannot be destroyed
+│
+│   on namespaces.tf line 7:
+│    7: resource "kubernetes_namespace" "burguer" {
+│
+│ Resource kubernetes_namespace.burguer has lifecycle.prevent_destroy set, but the plan calls for this resource to be destroyed. To
+│ avoid this error and continue with the plan, either disable lifecycle.prevent_destroy or reduce the scope of the plan using the
+│ -target option.
+```
+
 Some resources do support changes without recreation, like the Role permission. For example, here is a plan to remove "watch" verb from Role `read-pods` permissions:
 
 ```
@@ -603,4 +627,3 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 ````
 
 By managing the infrastructure as code we can push it to a GIT repository and open the possibility of any developer to create a PullRequest, making the interaction between developers and infrastructure managers straightforward, repeteable and auditable. By linking the PRs with a ticket system we can track every part of the infrastructure to its own story and requirements.
-
