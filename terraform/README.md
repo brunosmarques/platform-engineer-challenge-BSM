@@ -1,6 +1,8 @@
 # Terraform guide
 
-This guide will help you to install, understand and use Terraform locally to configure your local cluster.
+This guide will help you to install, understand and use Terraform locally to configure your local cluster. Here's an overview of the setup:
+
+![1732543745572](images/README/1732543745572.png)
 
 ## Terraform installation
 
@@ -9,7 +11,7 @@ In our example Terraform is used to configure the local Kubernetes cluster we cr
 1. Download the [pre-compiled binary from Hashicorp](https://developer.hashicorp.com/terraform/install)
 2. Add the binary to your OS path
 
-It is possible to use Homebrew, Chocolatey and linux distributions repositories to install Terraform. For more information, refeer to the [official documentation](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
+It is possible to use Homebrew (MacOS), Chocolatey (Windows) and distributions repositories (Linux) to install Terraform. For more information, refeer to the [official documentation](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
 
 Once installed, we are be able to open any terminal/powershell and run:
 
@@ -455,7 +457,7 @@ NAMESPACE              NAME                                             CREATED 
 pizza                  read-pods                                        2024-11-24T15:47:58Z
 ````
 
-### binding
+### rolebinding
 
 ```
 kubectl get rolebinding -A

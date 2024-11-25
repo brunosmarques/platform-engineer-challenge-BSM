@@ -1,6 +1,8 @@
 # Guide to run Kubernetes locally
 
-This guide will help you to install and run Kubernetes locally. In summary, we will create a Kubernetes cluster with a single node using an application named Minikube. Minikube supports many containerization backend technologies, such as Docker, Hyper-V and KVM, and the choice of backend depends on the OS you're using and the tools you're more familiar with. If you don't know where to start, don't worry, this guide will also help you to install and configure everything needed to have a local kubernetes cluster up and running.
+This guide will help you to install and run Kubernetes locally. In summary, we will create a Kubernetes cluster with a single node using an application named Minikube. Minikube supports many containerization backend technologies, such as Docker, Hyper-V and KVM, and the choice of backend depends on the OS you're using and the tools you're more familiar with. If you don't know where to start, don't worry, this guide will also help you to install and configure everything needed to have a local kubernetes cluster up and running. Here's a diagram for an overview of the final setup.
+
+![1732543110685](images/OPERATOR/1732543110685.png)
 
 ## Pre-requisites
 
@@ -14,13 +16,14 @@ Before moving on, please make sure your computer have at least:
 
 In this guide we'll be using Podman as container/vm manager because it's compatible with all OS and it has a typical installation. However, you should use what you're more confortable with. If you don't know where to start, Docker Desktop is a good option for personal use.
 
+
 | Container/VM manager                       | Supported OS                            | How to install (summary)                                                                                                                          | Official documentation / more information                                                     |
 | ------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Docker engine                              | Linux                                   | Follow official doc to install the docker engine runtime. Then, add your linux user to the docker group                                           | https://docs.docker.com/engine/install/                                                       |
 | Docker Desktop (recommended for beginners) | Windows, Mac OS and Linux               | Follow official doc ("Install Docker Desktop" button). Windows and MacOS installations are typical, but linux is more complex and has more steps. | https://docs.docker.com/desktop/ It's free for individuals but paid for enterprise customers. |
 | QEMU                                       | Windows, MacOS and Linux                | Follow official doc. Typical installationinstallation procedure for all OS                                                                        | https://www.qemu.org/download/                                                                |
 | Hyperkit                                   | MacOS                                   | Open a terminal and run`brew install hyperkit`                                                                                                    | https://minikube.sigs.k8s.io/docs/drivers/hyperkit/                                           |
-| Hyper-V                                    | Windows                                 | Open a powershell as admin and run`Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All`                                    | https://minikube.sigs.k8s.io/docs/drivers/hyperv/                                             |
+| Hyper-V                                    | Windows                                 | Open a powershell as admin and run`Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All`                                     | https://minikube.sigs.k8s.io/docs/drivers/hyperv/                                             |
 | KVM                                        | Linux                                   | Follow official doc. It depends on the linux distribution and can be a complicated process                                                        | https://minikube.sigs.k8s.io/docs/drivers/kvm2/                                               |
 | Podman                                     | Windows, MacOS and Linux                | Follow official doc. Typical installation procedure for all OS                                                                                    | GUI:https://podman-desktop.io/downloads CLI:https://podman.io/docs/installation               |
 | Parallels                                  | MacOS                                   | Download and install the app from web                                                                                                             | https://www.parallels.com/products/desktop/trial/                                             |
@@ -79,6 +82,7 @@ For other options and architectures, such as MacOS Intel x86-64, please consult 
 ### Set the container/vm manager driver
 
 Now that we installed MiniKube, we need to set the container/vm manager driver. This will define which manager MiniKube will use under the hood, so it needs to match the manager we've installed before.
+
 
 | container/vm manager                       | minikube command                        |
 | ------------------------------------------ | --------------------------------------- |
@@ -183,4 +187,3 @@ To fix this issue, we can:
 ### Dashboard never starts
 
 If the dashboard is taking too long to start it is possible the networking layer is misconfigured. Unfortunately this is most likely related to the backend manager and configuration varies a lot between providers. A docker manager running in Linux is the native and less complex setup. Hyper-V running on Windows can have some problems in multi nodes clusters, while Podman using WSL2 works fine as long as runner VM network is not shared with host. If this happens to you, consider the official provider documentation about network or changing the provider backend when possible.
-
