@@ -2,7 +2,7 @@
 
 This guide will help you to install, understand and use Terraform locally to configure your local cluster. Here's an overview of the setup:
 
-![1732543745572](images/README/1732543745572.png)
+![1732543745572](../images/TERRAFORM/1732543745572.png)
 
 ## Terraform installation
 
@@ -629,3 +629,4 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 ````
 
 By managing the infrastructure as code we can push it to a GIT repository and open the possibility of any developer to create a PullRequest, making the interaction between developers and infrastructure managers straightforward, repeteable and auditable. By linking the PRs with a ticket system we can track every part of the infrastructure to its own story and requirements.
+
